@@ -33,6 +33,9 @@ app:
     client-secret: ${GOOGLE_CLIENT_SECRET:}
   # E-mails (separados por vírgula) que recebem papel ADMIN ao entrar.
   admin-emails: ${ADMIN_EMAILS:}
+  # Domínio público de produção (ex.: spartanbolao.duckdns.org).
+  # Liberado no CORS como https://<domínio>, além do localhost de dev.
+  public-domain: ${DOMAIN:}
   # Sincronização com a football-data.org (jogos + placares da Copa).
   football:
     base-url: ${FOOTBALL_BASE_URL:https://api.football-data.org/v4}

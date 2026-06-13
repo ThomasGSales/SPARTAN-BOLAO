@@ -51,6 +51,8 @@ services:
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       ADMIN_EMAILS: ${ADMIN_EMAILS:-}
       FOOTBALL_DATA_TOKEN: ${FOOTBALL_DATA_TOKEN:-}
+      # Domínio público (prod) — liberado no CORS junto com localhost.
+      DOMAIN: ${DOMAIN:-}
     ports:
       # Host 8085 -> container 8080 (8080 do host costuma estar ocupado por
       # outro projeto). Dentro da rede Docker o serviço segue em 8080.

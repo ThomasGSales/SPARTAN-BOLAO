@@ -30,7 +30,8 @@ import javax.crypto.spec.SecretKeySpec
 
 @Configuration
 class SecurityConfig(
-    @Value("\${app.jwt.secret}") private val jwtSecret: String
+    @Value("\${app.jwt.secret}") private val jwtSecret: String,
+    @Value("\${app.public-domain:}") private val publicDomain: String
 ) {
 
     /**
@@ -92,8 +93,13 @@ class SecurityConfig(
 
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
+        // localhost para dev + o domínio público de produção (DOMAIN no .env).
+        val origins = mutableListOf("http://localhost:4200")
+        if (publicDomain.isNotBlank()) {
+            origins += "https://$publicDomain"
+        }
         val config = CorsConfiguration().apply {
-            allowedOrigins = listOf("http://localhost:4200")
+            allowedOrigins = origins
             allowedMethods = listOf("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
             allowedHeaders = listOf("*")
             allowCredentials = true
