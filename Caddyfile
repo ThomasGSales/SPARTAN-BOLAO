@@ -1,0 +1,9 @@
+# =====================================================================
+#  Caddy — HTTPS automático (Let's Encrypt) + proxy para o frontend.
+#  O domínio vem da variável DOMAIN no .env.
+#  O nginx do frontend já serve o SPA e faz proxy de /api -> backend.
+# =====================================================================
+{$DOMAIN} {
+	encode zstd gzip
+	reverse_proxy frontend:80
+}

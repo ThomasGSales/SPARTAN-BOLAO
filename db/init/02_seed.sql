@@ -1,0 +1,6 @@
+-- =====================================================================
+--  Sem seed manual.
+--  Times e jogos da Copa do Mundo 2026 são populados automaticamente
+--  pela sincronização com a football-data.org (WorldCupSyncService).
+--  Usuários são criados pelo cadastro/login real dos participantes.
+-- =====================================================================

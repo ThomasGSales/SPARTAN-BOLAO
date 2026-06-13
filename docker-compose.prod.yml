@@ -1,0 +1,40 @@
+# =====================================================================
+#  Override de PRODUÇÃO — adiciona o Caddy (HTTPS) na frente.
+#  Suba com:
+#    docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+#  Requer DOMAIN no .env (ex.: DOMAIN=bolao.seudominio.com) apontando
+#  por DNS (registro A) para o IP público da VM.
+# =====================================================================
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: spartan-caddy
+    restart: unless-stopped
+    depends_on:
+      - frontend
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - spartan-net
+
+  # Em produção tudo passa pelo Caddy (rede interna do Docker).
+  # Não publicamos 4200/8085/5432 no host — só 80/443 do Caddy ficam expostos.
+  frontend:
+    ports: !reset []
+  backend:
+    ports: !reset []
+  db:
+    ports: !reset []
+
+volumes:
+  caddy_data:
+  caddy_config:

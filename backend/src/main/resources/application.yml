@@ -1,0 +1,46 @@
+spring:
+  application:
+    name: bolao
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/spartan}
+    username: ${SPRING_DATASOURCE_USERNAME:spartan}
+    password: ${SPRING_DATASOURCE_PASSWORD:spartan}
+
+  jpa:
+    hibernate:
+      # O schema é criado pelo script SQL do Docker; Hibernate só valida.
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+
+  jackson:
+    default-property-inclusion: non_null
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:troque-este-segredo-em-producao}
+    expiration-minutes: 720
+  google:
+    client-id: ${GOOGLE_CLIENT_ID:}
+    client-secret: ${GOOGLE_CLIENT_SECRET:}
+  # E-mails (separados por vírgula) que recebem papel ADMIN ao entrar.
+  admin-emails: ${ADMIN_EMAILS:}
+  # Sincronização com a football-data.org (jogos + placares da Copa).
+  football:
+    base-url: ${FOOTBALL_BASE_URL:https://api.football-data.org/v4}
+    token: ${FOOTBALL_DATA_TOKEN:}
+    competition: ${FOOTBALL_COMPETITION:WC}
+    poll-ms: ${FOOTBALL_POLL_MS:60000}
+    initial-delay-ms: ${FOOTBALL_INITIAL_DELAY_MS:8000}
+
+logging:
+  level:
+    org.hibernate.SQL: debug

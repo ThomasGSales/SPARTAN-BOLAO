@@ -1,0 +1,82 @@
+# =====================================================================
+#  La Bendita Copa do Mundo SPARTAN — Orquestração de containers
+#  Suba tudo com:   docker compose up -d
+#  Apenas o banco:  docker compose up -d db
+# =====================================================================
+
+services:
+  # -------------------------------------------------------------------
+  #  PostgreSQL — pronto para uso (roda o schema na primeira subida)
+  # -------------------------------------------------------------------
+  db:
+    image: postgres:16-alpine
+    container_name: spartan-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-spartan}
+      POSTGRES_USER: ${POSTGRES_USER:-spartan}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-spartan}
+    ports:
+      - "5432:5432"
+    volumes:
+      - spartan_pgdata:/var/lib/postgresql/data
+      # Scripts em ./db/init rodam em ordem alfabética na 1ª subida
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-spartan} -d ${POSTGRES_DB:-spartan}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - spartan-net
+
+  # -------------------------------------------------------------------
+  #  Backend — Kotlin + Spring Boot (placeholder até a Fase 2)
+  # -------------------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: spartan-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-spartan}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-spartan}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-spartan}
+      JWT_SECRET: ${JWT_SECRET:-troque-este-segredo-em-producao}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-}
+      FOOTBALL_DATA_TOKEN: ${FOOTBALL_DATA_TOKEN:-}
+    ports:
+      # Host 8085 -> container 8080 (8080 do host costuma estar ocupado por
+      # outro projeto). Dentro da rede Docker o serviço segue em 8080.
+      - "8085:8080"
+    networks:
+      - spartan-net
+
+  # -------------------------------------------------------------------
+  #  Frontend — Angular (NX) servido por Nginx (placeholder até a Fase 3)
+  # -------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: spartan-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "4200:80"
+    networks:
+      - spartan-net
+
+volumes:
+  spartan_pgdata:
+
+networks:
+  spartan-net:
+    driver: bridge

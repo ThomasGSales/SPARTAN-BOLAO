@@ -1,0 +1,24 @@
+# Ambiente
+.env
+
+# Claude Code (configuração pessoal/local — contém comandos com o token da API)
+.claude/settings.local.json
+
+# Backend (Gradle / Kotlin) — o build roda na imagem gradle:8.7-jdk21 (sem wrapper)
+backend/.gradle/
+backend/build/
+
+# Frontend (Node / NX)
+frontend/node_modules/
+frontend/dist/
+frontend/.nx/
+frontend/.angular/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# SO
+.DS_Store
+Thumbs.db
