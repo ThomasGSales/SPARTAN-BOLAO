@@ -1,0 +1,87 @@
+@use '@angular/material' as mat;
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+// ---------------------------------------------------------------------
+//  Tema Material — Dark Mode nativo com primária vermelha (Spartan)
+// ---------------------------------------------------------------------
+html {
+  color-scheme: dark;
+
+  @include mat.theme(
+    (
+      color: (
+        theme-type: dark,
+        primary: mat.$red-palette,
+        tertiary: mat.$red-palette,
+      ),
+      typography: Inter,
+      density: 0,
+    )
+  );
+
+  // Sobrescreve variáveis do sistema para o vermelho Spartan exato
+  --mat-sys-primary: #e11d2a;
+  --mat-sys-on-primary: #ffffff;
+}
+
+// ---------------------------------------------------------------------
+//  Base global
+// ---------------------------------------------------------------------
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  @apply bg-ink-950 text-zinc-100 font-sans antialiased;
+  background-image:
+    radial-gradient(circle at 50% -10%, rgba(225, 29, 42, 0.14), transparent 55%),
+    linear-gradient(180deg, #08080a 0%, #0a0a0b 100%);
+  background-attachment: fixed;
+}
+
+// Scrollbar discreta com toque vermelho
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0a0b;
+}
+::-webkit-scrollbar-thumb {
+  background: #27272b;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #e11d2a;
+}
+
+// ---------------------------------------------------------------------
+//  Utilitários customizados — glassmorphism + texto neon
+// ---------------------------------------------------------------------
+@layer components {
+  .glass {
+    @apply bg-white/5 backdrop-blur-md border border-white/10;
+  }
+  .glass-strong {
+    @apply bg-ink-800/70 backdrop-blur-xl border border-white/10;
+  }
+  .neon-text {
+    color: #ff5c67;
+    text-shadow: 0 0 10px rgba(225, 29, 42, 0.6);
+  }
+  // Remove as setinhas dos inputs de placar (number)
+  .score-input::-webkit-outer-spin-button,
+  .score-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .score-input {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+}

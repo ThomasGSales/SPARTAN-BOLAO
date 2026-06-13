@@ -1,0 +1,282 @@
+<div class="mx-auto max-w-2xl px-4 pb-24 pt-6 sm:pt-8">
+  <spartan-header></spartan-header>
+
+  <!-- ===================== HERO ===================== -->
+  <header class="mb-6 text-center animate-rise">
+    <p class="mb-1 text-[11px] font-semibold uppercase tracking-[0.35em] text-spartan-400">
+      La Bendita Copa do Mundo
+    </p>
+    <h1 class="font-display text-3xl font-extrabold uppercase tracking-wider text-white sm:text-4xl">
+      SPAR<span class="neon-text">TAN</span>
+    </h1>
+  </header>
+
+  <!-- ===================== TOGGLE DE MODO ===================== -->
+  @if (!loading() && !error()) {
+    <div class="mb-6 flex justify-center">
+      <div class="inline-flex rounded-full border border-white/10 bg-ink-900/60 p-1 text-sm">
+        <button
+          type="button"
+          class="rounded-full px-4 py-1.5 font-semibold transition"
+          [class]="mode() === 'stepper' ? 'bg-spartan-600 text-white shadow-neon-soft' : 'text-zinc-400 hover:text-white'"
+          (click)="setMode('stepper')"
+        >
+          Palpitar
+        </button>
+        <button
+          type="button"
+          class="rounded-full px-4 py-1.5 font-semibold transition"
+          [class]="mode() === 'all' ? 'bg-spartan-600 text-white shadow-neon-soft' : 'text-zinc-400 hover:text-white'"
+          (click)="setMode('all')"
+        >
+          Todos os jogos
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- ===================== LOADING ===================== -->
+  @if (loading()) {
+    <div class="flex flex-col items-center gap-4 py-24 text-zinc-400">
+      <mat-spinner [diameter]="44" color="warn"></mat-spinner>
+      <span class="text-sm">Carregando os jogos…</span>
+    </div>
+  }
+
+  <!-- ===================== ERRO ===================== -->
+  @if (error()) {
+    <div class="glass mx-auto max-w-md rounded-2xl p-8 text-center">
+      <mat-icon class="!h-12 !w-12 !text-5xl text-spartan-400">error_outline</mat-icon>
+      <p class="mt-4 text-sm text-zinc-300">{{ error() }}</p>
+      <button mat-flat-button color="warn" class="!mt-6" (click)="load()">
+        <mat-icon>refresh</mat-icon> Tentar de novo
+      </button>
+    </div>
+  }
+
+  <!-- ===================== MODO: PALPITAR (STEPPER) ===================== -->
+  @if (!loading() && !error() && mode() === 'stepper') {
+    @if (current(); as m) {
+      <!-- Contador do próximo jogo (prazo mais urgente) -->
+      @if (nextMatch(); as nm) {
+        <div class="mb-4 flex items-center justify-center gap-2 text-xs text-zinc-400">
+          <span class="h-1.5 w-1.5 animate-pulse-glow rounded-full bg-spartan-500"></span>
+          Próximo apito em
+          <span class="font-display font-bold tabular-nums" [class.text-spartan-400]="isUrgent(nm)">
+            {{ countdown(nm) }}
+          </span>
+        </div>
+      }
+
+      <!-- Progresso -->
+      <div class="mb-3 flex items-center justify-between text-xs text-zinc-500">
+        <span><strong class="text-white">Palpite {{ position() }}</strong> de {{ total() }}</span>
+        <span>{{ filledCount() }} preenchidos</span>
+      </div>
+      <div class="mb-6 h-1.5 overflow-hidden rounded-full bg-ink-800">
+        <div
+          class="h-full rounded-full bg-spartan-600 transition-all duration-300"
+          [style.width.%]="total() ? (position() / total()) * 100 : 0"
+        ></div>
+      </div>
+
+      <!-- Card do jogo atual -->
+      <article class="glass-strong relative overflow-hidden rounded-3xl px-5 py-6 sm:px-8 sm:py-8 animate-rise">
+        <!-- Meta -->
+        <div class="mb-1 text-center text-[11px] uppercase tracking-wider text-zinc-500">
+          @if (m.groupLabel) { Grupo {{ m.groupLabel }} · } {{ formatKickoff(m.matchDatetime) }}
+        </div>
+
+        <!-- Contador "fecha em" -->
+        <div class="mb-6 text-center">
+          <div
+            class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold tabular-nums"
+            [class]="isUrgent(m)
+              ? 'bg-spartan-900/40 text-spartan-300 animate-pulse-glow'
+              : 'bg-ink-800 text-zinc-300'"
+          >
+            <mat-icon class="!h-4 !w-4 !text-base">schedule</mat-icon>
+            Fecha em {{ countdown(m) }}
+          </div>
+        </div>
+
+        <!-- Confronto + inputs -->
+        <div class="flex items-center justify-between gap-3">
+          <!-- Mandante -->
+          <div class="flex flex-1 flex-col items-center gap-2 text-center">
+            @if (m.homeTeam.flagUrl) {
+              <img [src]="m.homeTeam.flagUrl" [alt]="m.homeTeam.code"
+                   class="h-10 w-14 rounded object-cover ring-1 ring-white/10" />
+            }
+            <span class="text-sm font-semibold text-zinc-100 sm:text-base">{{ m.homeTeam.name }}</span>
+          </div>
+
+          <!-- Placar -->
+          <div class="flex items-center gap-2">
+            <input
+              #homeInput
+              type="number" inputmode="numeric" enterkeyhint="next" min="0" max="99"
+              class="score-input h-16 w-16 rounded-2xl border-2 border-white/10 bg-ink-900 text-center
+                     font-display text-3xl font-bold text-white outline-none transition
+                     focus:border-spartan-500 focus:shadow-neon-red"
+              [value]="guessValue(m.id, 'home') ?? ''"
+              (focus)="selectOnFocus($event)"
+              (input)="onScore(m.id, 'home', $any($event.target).value)"
+              (keydown.enter)="$event.preventDefault(); onHomeEnter()"
+            />
+            <span class="font-display text-xl text-zinc-600">×</span>
+            <input
+              #awayInput
+              type="number" inputmode="numeric" enterkeyhint="done" min="0" max="99"
+              class="score-input h-16 w-16 rounded-2xl border-2 border-white/10 bg-ink-900 text-center
+                     font-display text-3xl font-bold text-white outline-none transition
+                     focus:border-spartan-500 focus:shadow-neon-red"
+              [value]="guessValue(m.id, 'away') ?? ''"
+              (focus)="selectOnFocus($event)"
+              (input)="onScore(m.id, 'away', $any($event.target).value)"
+              (keydown.enter)="$event.preventDefault(); onAwayEnter()"
+            />
+          </div>
+
+          <!-- Visitante -->
+          <div class="flex flex-1 flex-col items-center gap-2 text-center">
+            @if (m.awayTeam.flagUrl) {
+              <img [src]="m.awayTeam.flagUrl" [alt]="m.awayTeam.code"
+                   class="h-10 w-14 rounded object-cover ring-1 ring-white/10" />
+            }
+            <span class="text-sm font-semibold text-zinc-100 sm:text-base">{{ m.awayTeam.name }}</span>
+          </div>
+        </div>
+
+        <!-- Status do auto-save -->
+        <div class="mt-5 flex h-5 items-center justify-center text-[11px] uppercase tracking-wider">
+          @switch (saveState(m.id)) {
+            @case ('saving') { <span class="text-zinc-500">salvando…</span> }
+            @case ('saved') {
+              <span class="inline-flex items-center gap-1 text-emerald-400">
+                <mat-icon class="!h-4 !w-4 !text-sm">check_circle</mat-icon> salvo
+              </span>
+            }
+            @case ('error') {
+              <span class="inline-flex items-center gap-1 text-spartan-400">
+                <mat-icon class="!h-4 !w-4 !text-sm">error_outline</mat-icon> erro ao salvar
+              </span>
+            }
+          }
+        </div>
+      </article>
+
+      <!-- Navegação -->
+      <div class="mt-6 flex items-center justify-between gap-3">
+        <button
+          type="button"
+          class="inline-flex items-center gap-1 rounded-full border border-white/10 px-4 py-2 text-sm
+                 font-semibold text-zinc-300 transition hover:bg-white/5 disabled:opacity-30"
+          [disabled]="position() <= 1"
+          (click)="goPrev()"
+        >
+          <mat-icon class="!h-4 !w-4 !text-base">chevron_left</mat-icon> Anterior
+        </button>
+
+        <span class="text-[11px] text-zinc-600">Enter avança · salva sozinho</span>
+
+        <button
+          type="button"
+          class="inline-flex items-center gap-1 rounded-full bg-spartan-600 px-5 py-2 text-sm
+                 font-semibold text-white transition hover:bg-spartan-500"
+          (click)="goNext()"
+        >
+          @if (isLastStep()) { Concluir } @else { Próximo }
+          <mat-icon class="!h-4 !w-4 !text-base">chevron_right</mat-icon>
+        </button>
+      </div>
+    } @else {
+      <!-- Nenhum jogo aberto -->
+      <div class="glass rounded-2xl py-16 text-center text-zinc-400">
+        <mat-icon class="!h-12 !w-12 !text-5xl text-spartan-400">emoji_events</mat-icon>
+        <p class="mt-4 text-sm">Nenhum jogo aberto para palpitar agora.</p>
+        <p class="mt-1 text-xs text-zinc-600">Os próximos confrontos abrem conforme a Copa avança.</p>
+        <button
+          type="button"
+          class="mt-6 inline-flex items-center gap-1 rounded-full bg-spartan-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-spartan-500"
+          (click)="setMode('all')"
+        >
+          Ver todos os jogos
+        </button>
+      </div>
+    }
+  }
+
+  <!-- ===================== MODO: TODOS OS JOGOS (REVISÃO) ===================== -->
+  @if (!loading() && !error() && mode() === 'all') {
+    @for (group of groups(); track trackPhase($index, group)) {
+      <section class="mb-8 animate-rise">
+        <div class="mb-3 flex items-center gap-3">
+          <span class="h-px flex-1 bg-gradient-to-r from-transparent to-spartan-700/60"></span>
+          <h2 class="font-display text-sm font-bold uppercase tracking-[0.2em] text-zinc-200">
+            {{ group.label }}
+          </h2>
+          <span class="h-px flex-1 bg-gradient-to-l from-transparent to-spartan-700/60"></span>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          @for (m of group.matches; track trackMatch($index, m)) {
+            <div class="glass flex items-center gap-3 rounded-xl px-4 py-3">
+              <!-- Mandante -->
+              <div class="flex flex-1 items-center justify-end gap-2 text-right">
+                <span class="truncate text-sm font-medium text-zinc-200">{{ m.homeTeam.name }}</span>
+                @if (m.homeTeam.flagUrl) {
+                  <img [src]="m.homeTeam.flagUrl" [alt]="m.homeTeam.code"
+                       class="h-5 w-7 shrink-0 rounded object-cover ring-1 ring-white/10" />
+                }
+              </div>
+
+              <!-- Centro: resultado oficial ou seu palpite -->
+              <div class="flex w-28 flex-col items-center">
+                @if (finalScore(m); as fs) {
+                  <span class="rounded-md bg-ink-700 px-2.5 py-1 font-display text-base font-bold text-white">
+                    {{ fs }}
+                  </span>
+                  @if (pointsFor(m.id) !== null) {
+                    <span class="mt-0.5 text-[10px] font-bold uppercase tracking-wider"
+                          [class]="pointsFor(m.id)! > 0 ? 'text-emerald-400' : 'text-zinc-600'">
+                      +{{ pointsFor(m.id) }} pts
+                    </span>
+                  }
+                } @else {
+                  @if (guessValue(m.id, 'home') !== null && guessValue(m.id, 'away') !== null) {
+                    <span class="font-display text-sm font-bold text-spartan-300">
+                      {{ guessValue(m.id, 'home') }} <span class="text-zinc-600">×</span> {{ guessValue(m.id, 'away') }}
+                    </span>
+                    <span class="text-[10px] uppercase tracking-wider text-zinc-600">seu palpite</span>
+                  } @else {
+                    <span class="font-display text-sm text-zinc-600">— × —</span>
+                    @if (isOpen(m)) {
+                      <span class="text-[10px] uppercase tracking-wider text-zinc-600 tabular-nums">{{ countdown(m) }}</span>
+                    }
+                  }
+                }
+              </div>
+
+              <!-- Visitante -->
+              <div class="flex flex-1 items-center gap-2">
+                @if (m.awayTeam.flagUrl) {
+                  <img [src]="m.awayTeam.flagUrl" [alt]="m.awayTeam.code"
+                       class="h-5 w-7 shrink-0 rounded object-cover ring-1 ring-white/10" />
+                }
+                <span class="truncate text-sm font-medium text-zinc-200">{{ m.awayTeam.name }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+    }
+
+    @if (groups().length === 0) {
+      <div class="glass rounded-2xl py-16 text-center text-zinc-400">
+        <mat-icon class="!h-12 !w-12 !text-5xl text-zinc-600">sports_soccer</mat-icon>
+        <p class="mt-4 text-sm">Nenhum jogo cadastrado ainda.</p>
+      </div>
+    }
+  }
+</div>
